@@ -18,18 +18,31 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState(null);
   const [token, setToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for stored authentication on app load
+    setIsLoading(true);
     const storedUser = localStorage.getItem('user');
     const storedRole = localStorage.getItem('role');
     const storedToken = localStorage.getItem('token');
+    
     if (storedUser && storedRole && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setRole(storedRole);
-      setToken(storedToken);
-      setIsAuthenticated(true);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setRole(storedRole);
+        setToken(storedToken);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        // Clear corrupted data
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        localStorage.removeItem('token');
+      }
     }
+    setIsLoading(false);
   }, []);
 
   const login = (userData, userRole, authToken) => {
@@ -73,8 +86,9 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (!response.ok) {
-        // Don't logout on 404 or other non-auth errors
-        if (response.status === 401 || response.status === 403) {
+        // Only logout on authentication errors, not on other errors
+        if (response.status === 401 && data.message && data.message.includes('token')) {
+          console.log('Token expired or invalid, logging out');
           logout();
         }
         throw new Error(data.message || `API request failed: ${response.status}`);
@@ -82,7 +96,10 @@ export const AuthProvider = ({ children }) => {
       
       return data;
     } catch (error) {
-      console.error('API call error:', error);
+      // Don't log network errors as they're common during development
+      if (!error.message.includes('fetch')) {
+        console.error('API call error:', error);
+      }
       throw error;
     }
   };
@@ -92,6 +109,7 @@ export const AuthProvider = ({ children }) => {
     role,
     token,
     isAuthenticated,
+    isLoading,
     login,
     logout,
     apiCall

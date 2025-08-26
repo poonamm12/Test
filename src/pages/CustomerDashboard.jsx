@@ -15,11 +15,14 @@ const CustomerDashboard = () => {
 
   // Refresh restaurants data periodically
   React.useEffect(() => {
-    loadUserOrders();
-    loadUserBookings();
-    const interval = setInterval(loadRestaurants, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+    // Only load user data if authenticated
+    if (user) {
+      loadUserOrders();
+      loadUserBookings();
+      const interval = setInterval(loadRestaurants, 30000); // Refresh every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const cuisines = ['all', 'Fine Dining', 'Japanese', 'Italian', 'Indian', 'Mexican'];
 

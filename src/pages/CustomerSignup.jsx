@@ -113,7 +113,11 @@ const CustomerSignup = () => {
       }
     } catch (error) {
       console.error('Signup error:', error);
-      addNotification('Network error. Please try again.', 'error');
+      if (error.message.includes('fetch') || error.message.includes('Network')) {
+        addNotification('Unable to connect to server. Please check your connection and try again.', 'error');
+      } else {
+        addNotification(error.message || 'Signup failed. Please try again.', 'error');
+      }
     } finally {
       setIsLoading(false);
     }

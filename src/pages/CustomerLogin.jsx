@@ -142,7 +142,11 @@ const CustomerLogin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ password: 'Network error. Please try again.' });
+      if (error.message.includes('fetch') || error.message.includes('Network')) {
+        setErrors({ password: 'Unable to connect to server. Please check your connection and try again.' });
+      } else {
+        setErrors({ password: error.message || 'Login failed. Please try again.' });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +185,11 @@ const CustomerLogin = () => {
       }
     } catch (error) {
       console.error('OTP login error:', error);
-      setErrors({ otp: 'Network error. Please try again.' });
+      if (error.message.includes('fetch') || error.message.includes('Network')) {
+        setErrors({ otp: 'Unable to connect to server. Please check your connection and try again.' });
+      } else {
+        setErrors({ otp: error.message || 'OTP verification failed. Please try again.' });
+      }
     } finally {
       setIsLoading(false);
     }

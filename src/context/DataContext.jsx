@@ -137,10 +137,11 @@ export const DataProvider = ({ children }) => {
   const [bookings, setBookings] = useState([]);
   const [cart, setCart] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { apiCall } = useAuth();
+  const { apiCall, isAuthenticated } = useAuth();
 
   // Load restaurants from API
   const loadRestaurants = async () => {
+    // Don't try to load if not authenticated and it's a protected endpoint
     setIsLoading(true);
     try {
       const result = await apiCall('/restaurants');
@@ -148,7 +149,10 @@ export const DataProvider = ({ children }) => {
         setRestaurants(result.data);
       }
     } catch (error) {
-      console.error('Failed to load restaurants:', error);
+      // Only log error if it's not a network error
+      if (!error.message.includes('fetch') && !error.message.includes('Network')) {
+        console.error('Failed to load restaurants:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -156,12 +160,15 @@ export const DataProvider = ({ children }) => {
 
   // Load restaurants on mount
   React.useEffect(() => {
-    loadRestaurants();
-    
-    // Set up periodic refresh to keep data in sync
-    const interval = setInterval(loadRestaurants, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, []); // Empty dependency array ensures this only runs once on mount
+    // Only load restaurants if we have authentication context ready
+    if (isAuthenticated !== undefined) {
+      loadRestaurants();
+      
+      // Set up periodic refresh to keep data in sync
+      const interval = setInterval(loadRestaurants, 60000); // Refresh every minute
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]); // Depend on authentication state
   
   // Admin functionality
   const updateRestaurant = (restaurantId, updates) => {
@@ -207,7 +214,9 @@ export const DataProvider = ({ children }) => {
         setOrders(result.data);
       }
     } catch (error) {
-      console.error('Failed to load orders:', error);
+      if (!error.message.includes('fetch') && !error.message.includes('Network')) {
+        console.error('Failed to load orders:', error);
+      }
     }
   };
 
@@ -218,7 +227,9 @@ export const DataProvider = ({ children }) => {
         setBookings(result.data);
       }
     } catch (error) {
-      console.error('Failed to load bookings:', error);
+      if (!error.message.includes('fetch') && !error.message.includes('Network')) {
+        console.error('Failed to load bookings:', error);
+      }
     }
   };
 

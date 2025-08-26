@@ -35,7 +35,9 @@ function App() {
         setTables(result.data);
       }
     } catch (error) {
-      console.error('Failed to load tables:', error);
+      if (!error.message.includes('fetch') && !error.message.includes('Network')) {
+        console.error('Failed to load tables:', error);
+      }
     } finally {
       setIsLoadingPhotos(false);
     }

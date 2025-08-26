@@ -49,8 +49,10 @@ const MenuView = () => {
         setMenuItems(result.data);
       }
     } catch (error) {
-      console.error('Failed to load menu:', error);
-      addNotification('Failed to load menu', 'error');
+      if (!error.message.includes('fetch') && !error.message.includes('Network')) {
+        console.error('Failed to load menu:', error);
+        addNotification('Failed to load menu', 'error');
+      }
       setMenuItems([]);
     } finally {
       setIsLoadingMenu(false);

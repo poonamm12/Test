@@ -52,7 +52,11 @@ const AdminLogin = () => {
       }
     })
     .catch(error => {
-      addNotification(error.message || 'Admin login failed', 'error');
+      if (error.message && (error.message.includes('fetch') || error.message.includes('Network'))) {
+        addNotification('Unable to connect to server. Please check your connection and try again.', 'error');
+      } else {
+        addNotification('Invalid admin credentials. Please check your Admin ID and password.', 'error');
+      }
     })
     .finally(() => {
       setIsLoading(false);

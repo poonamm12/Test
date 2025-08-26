@@ -50,7 +50,11 @@ const SuperAdminLogin = () => {
       }
     })
     .catch(error => {
-      addNotification(error.message || 'Super admin login failed', 'error');
+      if (error.message && (error.message.includes('fetch') || error.message.includes('Network'))) {
+        addNotification('Unable to connect to server. Please check your connection and try again.', 'error');
+      } else {
+        addNotification('Invalid super admin credentials or security code. Please check your details.', 'error');
+      }
     })
     .finally(() => {
       setIsLoading(false);
