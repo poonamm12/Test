@@ -8,21 +8,44 @@ import NotificationToast from '../components/NotificationToast';
 
 const CustomerDashboard = () => {
   const { user, logout } = useAuth();
-  const { restaurants, isLoading: restaurantsLoading, loadRestaurants, loadUserOrders, loadUserBookings } = useData();
+  const { restaurants, isLoading: restaurantsLoading, loadRestaurants, loadUserOrders, loadUserBookings, dataLoaded } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('all');
   const [favorites, setFavorites] = useState([]);
+  const [localLoading, setLocalLoading] = useState(false);
 
-  // Refresh restaurants data periodically
+  // Load user-specific data when component mounts
   React.useEffect(() => {
-    // Only load user data if authenticated
     if (user) {
+      setLocalLoading(true);
       loadUserOrders();
       loadUserBookings();
-      const interval = setInterval(loadRestaurants, 30000); // Refresh every 30 seconds
-      return () => clearInterval(interval);
+      
+      // Load fresh data if not already loaded
+      if (!dataLoaded) {
+        loadRestaurants();
+      }
+      
+      setLocalLoading(false);
     }
   }, [user]);
+
+  // Load favorites from localStorage
+  React.useEffect(() => {
+    const storedFavorites = localStorage.getItem('favorites');
+    if (storedFavorites) {
+      try {
+        setFavorites(JSON.parse(storedFavorites));
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    }
+  }, []);
+
+  // Save favorites to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   const cuisines = ['all', 'Fine Dining', 'Japanese', 'Italian', 'Indian', 'Mexican'];
 
@@ -41,6 +64,8 @@ const CustomerDashboard = () => {
     );
   };
 
+  // Show loading only if both restaurants and local data are loading
+  const showLoading = (restaurantsLoading && restaurants.length === 0) || localLoading;
   return (
     <div className="min-h-screen bg-gray-50">
       <NotificationToast />
@@ -203,7 +228,7 @@ const CustomerDashboard = () => {
             ))}
           </div>
           
-          {!restaurantsLoading && filteredRestaurants.length === 0 && (
+          {!showLoading && filteredRestaurants.length === 0 && (
             <div className="text-center py-8 md:py-12">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">No restaurants found</h3>
@@ -211,7 +236,7 @@ const CustomerDashboard = () => {
             </div>
           )}
           
-          {restaurantsLoading && (
+          {showLoading && (
             <div className="text-center py-8 md:py-12">
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">Loading restaurants...</p>

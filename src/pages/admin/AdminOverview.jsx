@@ -28,47 +28,86 @@ const AdminOverview = () => {
   });
   const [recentTables, setRecentTables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
+    // Load data from localStorage first
+    const loadStoredData = () => {
+      try {
+        const storedDashboard = localStorage.getItem('adminDashboardData');
+        const storedTables = localStorage.getItem('adminTables');
+        
+        if (storedDashboard) {
+          setDashboardData(JSON.parse(storedDashboard));
+          setDataLoaded(true);
+        }
+        if (storedTables) {
+          setRecentTables(JSON.parse(storedTables));
+        }
+      } catch (error) {
+        console.error('Error loading stored admin data:', error);
+      }
+    };
+    
+    loadStoredData();
     loadDashboardData();
   }, []);
 
+  // Save data to localStorage when it changes
+  useEffect(() => {
+    if (dataLoaded && Object.keys(dashboardData.stats).length > 0) {
+      localStorage.setItem('adminDashboardData', JSON.stringify(dashboardData));
+    }
+  }, [dashboardData, dataLoaded]);
+
+  useEffect(() => {
+    if (recentTables.length > 0) {
+      localStorage.setItem('adminTables', JSON.stringify(recentTables));
+    }
+  }, [recentTables]);
   const loadDashboardData = async () => {
-    setIsLoading(true);
+    if (!dataLoaded) {
+      setIsLoading(true);
+    }
     try {
       const response = await apiCall('/admin/dashboard');
-      if (response.success) {
+      if (response && response.success) {
         setDashboardData(response.data);
+        setDataLoaded(true);
       }
 
       // Load recent tables
       const tablesResponse = await apiCall('/admin/tables');
-      if (tablesResponse.success) {
+      if (tablesResponse && tablesResponse.success) {
         setRecentTables(tablesResponse.data.slice(0, 5));
       }
     } catch (error) {
-      addNotification('Failed to load dashboard data', 'error');
-      // Set default data for demo
-      setDashboardData({
-        stats: {
-          totalOrders: 0,
-          pendingOrders: 0,
-          totalBookings: 0,
-          todaysBookings: 0,
-          totalRevenue: 0,
-          totalMenuItems: 0,
-          availableTables: 0
-        },
-        recentOrders: [],
-        recentBookings: []
-      });
-      setRecentTables([]);
+      console.warn('⚠️ Failed to load admin dashboard data:', error.message);
+      
+      // Only set default data if no stored data exists
+      if (!dataLoaded) {
+        setDashboardData({
+          stats: {
+            totalOrders: 0,
+            pendingOrders: 0,
+            totalBookings: 0,
+            todaysBookings: 0,
+            totalRevenue: 0,
+            totalMenuItems: 0,
+            availableTables: 0
+          },
+          recentOrders: [],
+          recentBookings: []
+        });
+        setRecentTables([]);
+        setDataLoaded(true);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !dataLoaded) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -190,7 +229,12 @@ const AdminOverview = () => {
                     </span>
                   </div>
                 </div>
-              ))}
+              )) || []}
+              {(!dashboardData.recentOrders || dashboardData.recentOrders.length === 0) && (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 text-sm">No recent orders</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

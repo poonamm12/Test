@@ -24,39 +24,68 @@ const SuperAdminOverview = () => {
     recentBookings: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
+    // Load data from localStorage first
+    const loadStoredData = () => {
+      try {
+        const storedDashboard = localStorage.getItem('superAdminDashboardData');
+        
+        if (storedDashboard) {
+          setDashboardData(JSON.parse(storedDashboard));
+          setDataLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error loading stored super admin data:', error);
+      }
+    };
+    
+    loadStoredData();
     loadDashboardData();
   }, []);
 
+  // Save data to localStorage when it changes
+  useEffect(() => {
+    if (dataLoaded && Object.keys(dashboardData.stats).length > 0) {
+      localStorage.setItem('superAdminDashboardData', JSON.stringify(dashboardData));
+    }
+  }, [dashboardData, dataLoaded]);
   const loadDashboardData = async () => {
-    setIsLoading(true);
+    if (!dataLoaded) {
+      setIsLoading(true);
+    }
     try {
       const response = await apiCall('/super-admin/dashboard');
-      if (response.success) {
+      if (response && response.success) {
         setDashboardData(response.data);
+        setDataLoaded(true);
       }
     } catch (error) {
-      addNotification('Failed to load dashboard data', 'error');
-      // Use mock data for demo
-      setDashboardData({
-        stats: {
-          totalRestaurants: 3,
-          totalCustomers: 1250,
-          totalOrders: 4567,
-          totalRevenue: 125000,
-          pendingOrders: 23,
-          activeAdmins: 3
-        },
-        recentOrders: [],
-        recentBookings: []
-      });
+      console.warn('⚠️ Failed to load super admin dashboard data:', error.message);
+      
+      // Only set default data if no stored data exists
+      if (!dataLoaded) {
+        setDashboardData({
+          stats: {
+            totalRestaurants: 3,
+            totalCustomers: 1250,
+            totalOrders: 4567,
+            totalRevenue: 125000,
+            pendingOrders: 23,
+            activeAdmins: 3
+          },
+          recentOrders: [],
+          recentBookings: []
+        });
+        setDataLoaded(true);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !dataLoaded) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
@@ -203,7 +232,8 @@ const SuperAdminOverview = () => {
                     <p className="text-sm text-gray-500">{order.customer_name}</p>
                   </div>
                 </div>
-              )) || (
+              )) || []}
+              {(!dashboardData.recentOrders || dashboardData.recentOrders.length === 0) && (
                 <div className="text-center py-8">
                   <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500">No recent orders</p>
