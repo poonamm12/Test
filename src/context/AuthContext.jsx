@@ -18,31 +18,31 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState(null);
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     // Check for stored authentication on app load
     const checkStoredAuth = () => {
-      setIsLoading(true);
       try {
-    const storedUser = localStorage.getItem('user');
-    const storedRole = localStorage.getItem('role');
-    const storedToken = localStorage.getItem('token');
-    
-    if (storedUser && storedRole && storedToken) {
-        const parsedUser = JSON.parse(storedUser);
+        const storedUser = localStorage.getItem('user');
+        const storedRole = localStorage.getItem('role');
+        const storedToken = localStorage.getItem('token');
+        
+        if (storedUser && storedRole && storedToken) {
+          const parsedUser = JSON.parse(storedUser);
             
-            // Validate token is not expired
+          // Validate token is not expired
+          try {
             const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
             const currentTime = Date.now() / 1000;
             
             if (tokenPayload.exp && tokenPayload.exp > currentTime) {
               // Token is valid
-        setUser(parsedUser);
-        setRole(storedRole);
-        setToken(storedToken);
-        setIsAuthenticated(true);
+              setUser(parsedUser);
+              setRole(storedRole);
+              setToken(storedToken);
+              setIsAuthenticated(true);
               console.log('✅ Authentication restored from localStorage');
             } else {
               // Token expired, clear storage
@@ -51,6 +51,13 @@ export const AuthProvider = ({ children }) => {
               localStorage.removeItem('role');
               localStorage.removeItem('token');
             }
+          } catch (tokenError) {
+            console.error('Error parsing token:', tokenError);
+            // Clear corrupted token data
+            localStorage.removeItem('user');
+            localStorage.removeItem('role');
+            localStorage.removeItem('token');
+          }
         }
       } catch (error) {
         console.error('Error parsing stored user data:', error);
@@ -59,7 +66,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('role');
         localStorage.removeItem('token');
       } finally {
-        setIsLoading(false);
         setAuthChecked(true);
       }
     };
@@ -91,6 +97,7 @@ export const AuthProvider = ({ children }) => {
 
   // API helper function
   const apiCall = async (endpoint, options = {}) => {
+    setIsLoading(true);
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     const config = {
       headers: {
@@ -134,6 +141,8 @@ export const AuthProvider = ({ children }) => {
         console.error('API call error:', error);
       }
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 

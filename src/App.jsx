@@ -21,22 +21,10 @@ import { useAuth } from './context/AuthContext';
 
 // App content component that uses auth context
 const AppContent = () => {
-  const { isLoading, authChecked } = useAuth();
-  const [initialLoading, setInitialLoading] = useState(true);
+  const { authChecked } = useAuth();
 
-  useEffect(() => {
-    // Only show initial loading if auth hasn't been checked yet
-    if (authChecked) {
-      setInitialLoading(false);
-    } else {
-      // Simulate initial app loading with premium animation
-      const timer = setTimeout(() => setInitialLoading(false), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [authChecked]);
-
-  // Show loading screen during initial app load or auth check
-  if (!authChecked || (initialLoading && !authChecked)) {
+  // Show loading screen only while checking authentication
+  if (!authChecked) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -46,29 +34,7 @@ const AppContent = () => {
           </div>
           <h2 className="text-white text-2xl font-bold mb-2">RestaurantAI Platform</h2>
           <p className="text-blue-200 animate-pulse">
-            Initializing AI-Powered Experience...
-          </p>
-          <div className="mt-4 w-64 h-1 bg-gray-700 rounded-full mx-auto overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse" style={{ width: '100%', animation: 'loading 2s ease-in-out' }}></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading only during API calls, not auth checks
-  if (isLoading && authChecked) {
-    return () => clearTimeout(timer);
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-purple-500/20 border-b-purple-500 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-          </div>
-          <h2 className="text-white text-2xl font-bold mb-2">RestaurantAI Platform</h2>
-          <p className="text-blue-200 animate-pulse">
-            Loading data...
+            Checking authentication...
           </p>
           <div className="mt-4 w-64 h-1 bg-gray-700 rounded-full mx-auto overflow-hidden">
             <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse" style={{ width: '100%', animation: 'loading 2s ease-in-out' }}></div>

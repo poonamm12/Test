@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ChefHat, Phone, ArrowLeft, Eye, EyeOff, Send, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 
 const CustomerLogin = () => {
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/dashboard';
   const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'mobile'
   const [formData, setFormData] = useState({
     email: '',
@@ -22,9 +24,21 @@ const CustomerLogin = () => {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, role } = useAuth();
   const { addNotification } = useNotification();
 
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      if (role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (role === 'superadmin') {
+        navigate('/super-admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    }
+  }, [isAuthenticated, role, navigate, from]);
   const countryCodes = [
     { code: '+1', country: 'US/CA', flag: '🇺🇸' },
     { code: '+44', country: 'UK', flag: '🇬🇧' },
@@ -179,7 +193,7 @@ const CustomerLogin = () => {
         const user = result.data.user;
         login(user, user.role, result.data.token);
         addNotification('Login successful!', 'success');
-        navigate('/dashboard');
+        navigate(from, { replace: true });
       } else {
         setErrors({ otp: result.message || 'Invalid OTP' });
       }
