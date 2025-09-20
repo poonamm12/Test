@@ -14,7 +14,11 @@ const MenuView = () => {
   
   const [menuItems, setMenuItems] = useState([]);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
-  const [restaurant, setRestaurant] = useState(null);
+  const [restaurant, setRestaurant] = useState(() => {
+    // Try to get restaurant from context first
+    const contextRestaurant = restaurants.find(r => r.id === parseInt(id));
+    return contextRestaurant || null;
+  });
   
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDietary, setSelectedDietary] = useState('all');
@@ -22,10 +26,13 @@ const MenuView = () => {
 
   React.useEffect(() => {
     if (id) {
-      loadRestaurant();
+      // Only load restaurant if not already available from context
+      if (!restaurant) {
+        loadRestaurant();
+      }
       loadMenu();
     }
-  }, [id]);
+  }, [id, restaurants]); // Add restaurants dependency to update when context changes
 
   const loadRestaurant = async () => {
     try {
@@ -37,7 +44,9 @@ const MenuView = () => {
       console.error('Failed to load restaurant:', error);
       // Fallback to local data
       const localRestaurant = restaurants.find(r => r.id === parseInt(id));
-      setRestaurant(localRestaurant);
+      if (localRestaurant) {
+        setRestaurant(localRestaurant);
+      }
     }
   };
 

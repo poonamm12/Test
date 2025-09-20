@@ -21,12 +21,14 @@ import { NotificationProvider } from './context/NotificationContext';
 import CustomerProtectedRoute from './components/CustomerProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import SuperAdminProtectedRoute from './components/SuperAdminProtectedRoute';
+import NotificationToast from './components/NotificationToast';
 
 // Customer App Section
 const CustomerApp = () => {
   return (
     <CustomerAuthProvider>
       <CustomerDataProvider>
+        <NotificationToast />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<CustomerLogin />} />

@@ -7,7 +7,7 @@ import { CreditCard, Lock, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const PaymentView = () => {
   const navigate = useNavigate();
-  const { clearCart } = useCustomerData();
+  const { clearCart, loadUserOrders } = useCustomerData();
   const { apiCall } = useCustomerAuth();
   const { addNotification } = useNotification();
   
@@ -109,6 +109,9 @@ const PaymentView = () => {
         clearCart();
         localStorage.removeItem('orderData');
         addNotification('Payment successful! Order confirmed.', 'success');
+        
+        // Refresh user orders data
+        loadUserOrders();
         
         // Redirect to dashboard after success
         setTimeout(() => {

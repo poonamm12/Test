@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Clock, Users, ArrowLeft, Check, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
+import { useCustomerData } from '../context/CustomerDataContext';
 
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { apiCall } = useCustomerAuth();
+  const { loadUserBookings } = useCustomerData();
   const [bookingData, setBookingData] = useState({
     date: '',
     time: '',
@@ -24,7 +26,7 @@ function App() {
   // Load tables from backend
   React.useEffect(() => {
     loadTables();
-  }, [id]); // Only re-run when restaurant ID changes
+  }, [id, apiCall]); // Add apiCall dependency for proper re-loading
 
   const loadTables = async () => {
     setIsLoadingPhotos(true);
@@ -177,6 +179,8 @@ function App() {
         
       // Refresh tables to update status
       loadTables();
+      // Refresh user bookings data
+      loadUserBookings();
     }
   };
 

@@ -30,21 +30,38 @@ export const CustomerDataProvider = ({ children }) => {
         const storedCart = localStorage.getItem('customer_cart');
         
         if (storedRestaurants) {
-          setRestaurants(JSON.parse(storedRestaurants));
+          const parsedRestaurants = JSON.parse(storedRestaurants);
+          if (Array.isArray(parsedRestaurants)) {
+            setRestaurants(parsedRestaurants);
+          }
         }
         if (storedOrders) {
-          setOrders(JSON.parse(storedOrders));
+          const parsedOrders = JSON.parse(storedOrders);
+          if (Array.isArray(parsedOrders)) {
+            setOrders(parsedOrders);
+          }
         }
         if (storedBookings) {
-          setBookings(JSON.parse(storedBookings));
+          const parsedBookings = JSON.parse(storedBookings);
+          if (Array.isArray(parsedBookings)) {
+            setBookings(parsedBookings);
+          }
         }
         if (storedCart) {
-          setCart(JSON.parse(storedCart));
+          const parsedCart = JSON.parse(storedCart);
+          if (Array.isArray(parsedCart)) {
+            setCart(parsedCart);
+          }
         }
         
         console.log('📦 Customer data restored from localStorage');
       } catch (error) {
         console.error('Error loading stored customer data:', error);
+        // Reset to empty arrays on parse error
+        setRestaurants([]);
+        setOrders([]);
+        setBookings([]);
+        setCart([]);
       }
     };
     
@@ -59,13 +76,13 @@ export const CustomerDataProvider = ({ children }) => {
   }, [restaurants]);
 
   useEffect(() => {
-    if (orders.length > 0) {
+    if (orders.length >= 0) { // Save even empty arrays to maintain state
       localStorage.setItem('customer_orders', JSON.stringify(orders));
     }
   }, [orders]);
 
   useEffect(() => {
-    if (bookings.length > 0) {
+    if (bookings.length >= 0) { // Save even empty arrays to maintain state
       localStorage.setItem('customer_bookings', JSON.stringify(bookings));
     }
   }, [bookings]);
@@ -133,6 +150,7 @@ export const CustomerDataProvider = ({ children }) => {
             available_tables: 10
           }
         ]);
+        setDataLoaded(true);
       }
     } finally {
       setIsLoading(false);
@@ -147,8 +165,14 @@ export const CustomerDataProvider = ({ children }) => {
       // Set up periodic refresh only if authenticated
       let interval;
       if (isAuthenticated && token) {
+        // Load user data when authenticated
+        loadUserOrders();
+        loadUserBookings();
+        
         interval = setInterval(() => {
           loadRestaurants();
+          loadUserOrders();
+          loadUserBookings();
         }, 60000); // Refresh every minute
       }
       return () => clearInterval(interval);
@@ -196,6 +220,7 @@ export const CustomerDataProvider = ({ children }) => {
       }
     } catch (error) {
       console.warn('⚠️ Failed to load customer orders:', error.message);
+      // Don't clear existing orders on error, keep cached data
     }
   };
 
@@ -210,6 +235,7 @@ export const CustomerDataProvider = ({ children }) => {
       }
     } catch (error) {
       console.warn('⚠️ Failed to load customer bookings:', error.message);
+      // Don't clear existing bookings on error, keep cached data
     }
   };
 

@@ -84,6 +84,12 @@ export const CustomerAuthProvider = ({ children }) => {
     setToken(null);
     setIsAuthenticated(false);
     clearCustomerAuth();
+    
+    // Clear customer data on logout
+    localStorage.removeItem('customer_restaurants');
+    localStorage.removeItem('customer_orders');
+    localStorage.removeItem('customer_bookings');
+    localStorage.removeItem('customer_cart');
   };
 
   // API helper function for customer requests

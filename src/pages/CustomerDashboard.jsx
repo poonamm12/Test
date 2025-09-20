@@ -8,18 +8,21 @@ import NotificationToast from '../components/NotificationToast';
 
 const CustomerDashboard = () => {
   const { user, logout } = useCustomerAuth();
-  const { restaurants, isLoading: restaurantsLoading, loadRestaurants, loadUserOrders, loadUserBookings } = useCustomerData();
+  const { restaurants, isLoading: restaurantsLoading, dataLoaded, loadRestaurants, loadUserOrders, loadUserBookings } = useCustomerData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('all');
   const [favorites, setFavorites] = useState([]);
 
   // Refresh restaurants data periodically
   React.useEffect(() => {
-    loadUserOrders();
-    loadUserBookings();
+    // Only load user data if authenticated
+    if (user) {
+      loadUserOrders();
+      loadUserBookings();
+    }
     const interval = setInterval(loadRestaurants, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [user]); // Depend on user to ensure we only load when authenticated
 
   const cuisines = ['all', 'Fine Dining', 'Japanese', 'Italian', 'Indian', 'Mexican'];
 
@@ -200,7 +203,7 @@ const CustomerDashboard = () => {
             ))}
           </div>
           
-          {!restaurantsLoading && filteredRestaurants.length === 0 && (
+          {!restaurantsLoading && dataLoaded && filteredRestaurants.length === 0 && (
             <div className="text-center py-8 md:py-12">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">No restaurants found</h3>
@@ -208,7 +211,7 @@ const CustomerDashboard = () => {
             </div>
           )}
           
-          {restaurantsLoading && (
+          {(restaurantsLoading || !dataLoaded) && (
             <div className="text-center py-8 md:py-12">
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">Loading restaurants...</p>

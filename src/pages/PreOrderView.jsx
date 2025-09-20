@@ -8,7 +8,7 @@ import { ArrowLeft, Trash2, Plus, Minus, ShoppingCart, Calendar, Clock } from 'l
 const PreOrderView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { restaurants, cart, removeFromCart, clearCart } = useCustomerData();
+  const { restaurants, cart, removeFromCart, clearCart, loadUserOrders } = useCustomerData();
   const { apiCall } = useCustomerAuth();
   const { addNotification } = useNotification();
   
