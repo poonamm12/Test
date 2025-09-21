@@ -53,21 +53,15 @@ export const CustomerDataProvider = ({ children }) => {
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    if (restaurants.length > 0) {
-      localStorage.setItem('customer_restaurants', JSON.stringify(restaurants));
-    }
+    localStorage.setItem('customer_restaurants', JSON.stringify(restaurants));
   }, [restaurants]);
 
   useEffect(() => {
-    if (orders.length > 0) {
-      localStorage.setItem('customer_orders', JSON.stringify(orders));
-    }
+    localStorage.setItem('customer_orders', JSON.stringify(orders));
   }, [orders]);
 
   useEffect(() => {
-    if (bookings.length > 0) {
-      localStorage.setItem('customer_bookings', JSON.stringify(bookings));
-    }
+    localStorage.setItem('customer_bookings', JSON.stringify(bookings));
   }, [bookings]);
 
   useEffect(() => {
@@ -213,6 +207,13 @@ export const CustomerDataProvider = ({ children }) => {
     }
   };
 
+  // Load user data when authentication is ready
+  useEffect(() => {
+    if (isAuthenticated && token && authChecked) {
+      loadUserOrders();
+      loadUserBookings();
+    }
+  }, [isAuthenticated, token, authChecked]);
   const value = {
     restaurants,
     isLoading,
